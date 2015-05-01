@@ -20,8 +20,8 @@
             android:name=".AlarmView"
             android:label="@string/app_name" >
         </activity>
-        <receiver android:name="com.example.administrator.myClock.AlarmReceiver" android:process=":remote"/>
-        <service android:name="com.example.administrator.myClock.MyAlarmService" />
+        <receiver android:name=".AlarmReceiver" android:process=":remote"/>
+        <service android:enabled="true" android:name=".MyAlarmService" />
     </application>
 
 </manifest>

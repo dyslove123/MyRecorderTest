@@ -46,6 +46,11 @@ public class MainActivity extends ActionBarActivity {
                                 /* 取消 */
                 am.cancel(pendingIntent);
                 Log.d("myClock","cancel");
+
+
+                Intent it=new Intent(MainActivity.this,MyAlarmService.class);
+
+                MainActivity.this.stopService(it);
             }
         });
 
@@ -53,6 +58,9 @@ public class MainActivity extends ActionBarActivity {
     View.OnClickListener confirmClick=new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+            Calendar calender= Calendar.getInstance();
+            calender.set(dp.getYear(),dp.getMonth(),dp.getDayOfMonth(),tp.getCurrentHour(),tp.getCurrentMinute());
+            calender.add(Calendar.SECOND,5);
             String z=tp.getCurrentHour().toString()+":"+tp.getCurrentMinute().toString();
             Toast.makeText(MainActivity.this,z,Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(getApplicationContext(),
@@ -65,16 +73,17 @@ public class MainActivity extends ActionBarActivity {
                             intent, 0);
 
             AlarmManager am;
-
             am = (AlarmManager) getSystemService(ALARM_SERVICE);
-            Calendar calender= Calendar.getInstance();
-            calender.set(dp.getYear(),dp.getMonth(),dp.getDayOfMonth(),tp.getCurrentHour(),tp.getCurrentMinute());
-            calender.add(Calendar.SECOND,5);
-            am.set(AlarmManager.RTC_WAKEUP,calender.getTimeInMillis(),pendingIntent);
+         //   am.set(AlarmManager.RTC_WAKEUP,calender.getTimeInMillis(),pendingIntent);
+
             String p=dp.getDayOfMonth()+":"+(dp.getMonth()+1)+":"+dp.getYear();
             Log.d("myClock","create22:"+calender.getTime().toString()+p);
+            calender.add(Calendar.SECOND,2);
+            Intent it=new Intent(MainActivity.this,MyAlarmService.class);
+            it.putExtra("time",calender.getTimeInMillis());
 
-            //startService(new Intent("com.example.administrator.myclock.MyAlarmService"));
+
+            startService(it);
         }
     };
 

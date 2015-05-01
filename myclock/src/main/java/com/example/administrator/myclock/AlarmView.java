@@ -14,7 +14,7 @@ public class AlarmView extends Activity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.alarm_layout);
         int id=getIntent().getIntExtra("id",0);
-        String time=getIntent().getStringExtra("time");
+        String time = String.valueOf(getIntent().getLongExtra("time",0));
         TextView tv=(TextView)findViewById(R.id.message);
         Log.d("myClock","show："+time);
         tv.setText("id: "+id+" at time: "+time);
