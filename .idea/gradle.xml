@@ -10,7 +10,9 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/myclient_for_xxd" />
             <option value="$PROJECT_DIR$/myclock" />
+            <option value="$PROJECT_DIR$/sqlite" />
           </set>
         </option>
       </GradleProjectSettings>

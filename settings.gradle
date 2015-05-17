@@ -1,1 +1,1 @@
-include ':app', ':myclock'
+include ':app', ':myclock', ':sqlite', ':myclient_for_xxd'
