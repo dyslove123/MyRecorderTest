@@ -2,80 +2,148 @@ package com.example.administrator.myclient_for_xxd;
 
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import org.w3c.dom.Text;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.lang.reflect.Array;
+import java.net.Socket;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Queue;
+import java.util.Vector;
+import java.util.concurrent.SynchronousQueue;
 
 
 public class MainActivity extends ActionBarActivity {
 
-    TextView tv= null;
-    EditText ev=null;
-    EditText ip=null;
-    Button send=null;
+    TextView tv = null;
+    EditText ev = null;
+    EditText ip = null;
+    Button send = null;
+    Button link = null;
     private String content = "";
+    Socket socket = null;
+    Thread printServer = null;
+    Thread receive = null;
+    PrintWriter pw = null;
+    BufferedReader br = null;
+    Vector <String> waitMessage=null;
+    ScrollView sv=null;
     public Handler mHandler = new Handler() {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            tv.setText(content);
+            String z=tv.getText().toString();
+
+            while(!waitMessage.isEmpty()) {
+                z = z + "\n" + waitMessage.elementAt(0);
+                waitMessage.remove(0);
+            }
+            tv.setText(z);
+
+            sv.fullScroll(ScrollView.FOCUS_DOWN);
         }
     };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        tv= (TextView) findViewById(R.id.outputTV);
-        ev=(EditText) findViewById(R.id.editText);
-        send=(Button) findViewById(R.id.send);
+        tv = (TextView) findViewById(R.id.outputTV);
+        ev = (EditText) findViewById(R.id.editText);
+        send = (Button) findViewById(R.id.send);
         send.setOnClickListener(click);
-        ip=(EditText) findViewById(R.id.IP);
-        ms=new MySocket("2");
+        sv=(ScrollView)findViewById(R.id.scrollView);
+        ip = (EditText) findViewById(R.id.IP);
+        link = (Button) findViewById(R.id.Link);
+        link.setOnClickListener(linkClick);
+        waitMessage= new Vector <String>();
     }
-    MySocket ms;
-    View.OnClickListener click = new View.OnClickListener() {
+
+    View.OnClickListener linkClick = new View.OnClickListener() {
+
         @Override
         public void onClick(View v) {
-
-            Thread t=new Thread(new mythread());
+            Thread t = new Thread(new linkThread());
             t.start();
         }
     };
-    public class mythread implements  Runnable
-    {
+
+    View.OnClickListener click = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (socket == null) {
+                Toast.makeText(getApplicationContext(),"you need to link before send",Toast.LENGTH_LONG).show();
+                return;
+            }
+            printServer = new Thread(new printThread());
+            printServer.start();
+        }
+    };
+
+    public class linkThread implements Runnable {
         @Override
         public void run() {
-            ms=new MySocket(ev.getText().toString());
-            ms.Required(ip.getText().toString(),8080);
-            content=ms.get;
-            mHandler.sendMessage(mHandler.obtainMessage());
+            try {
+
+                if (socket != null) {
+                    socket.close();
+                }
+                socket = new Socket(ip.getText().toString(), 8080);
+                pw = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
+                        socket.getOutputStream(), "Unicode")), true);
+                br = new BufferedReader(new InputStreamReader(
+                        socket.getInputStream(), "Unicode"));
+                receive = new Thread(new receiveThread());
+                receive.start();
+                Log.e("mylog", "socket make success");
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+
+    public class receiveThread implements Runnable {
+
+        @Override
+        public void run() {
+            try {
+
+                Log.e("mylog", "receive start loop");
+                while (true) {
+                    String get;
+                    get = br.readLine();
+                    if (get == null)
+                        continue;
+                    waitMessage.add(get);
+                    mHandler.sendMessage(mHandler.obtainMessage());
+                    Log.e("mylog", "get message" + content);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+    public class printThread implements Runnable {
+        @Override
+        public void run() {
+            pw.println(ev.getText().toString());
+            pw.flush();
         }
-
-        return super.onOptionsItemSelected(item);
     }
 }
